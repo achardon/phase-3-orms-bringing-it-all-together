@@ -1,3 +1,9 @@
+require 'pry'
+require_relative '../config/environment'
+
+
+#last two methods in Dog class do not work correctly
+
 class Dog
     attr_accessor :name, :breed, :id
     
@@ -39,7 +45,7 @@ class Dog
     end
 
     def self.create(name:, breed:)
-        dog = Dog.new(name: name, breed: breed)
+        dog = self.new(name: name, breed: breed)
         dog.save
     end
 
@@ -64,5 +70,30 @@ class Dog
         self.new_from_db(DB[:conn].execute(sql, id).first)
     end
 
+    def self.find_or_create_by(name:, breed:)
+        sql = <<-SQL
+            SELECT * FROM dogs
+            WHERE (dogs.name = ? AND dogs.breed = ?)
+            LIMIT 1
+            SQL
+        current_dog = self.new_from_db(DB[:conn].execute(sql, name, breed).first)
+        current_dog ? current_dog : self.create(name: name, breed: breed) 
+    end
+
+    def update
+        # self.create(id: self.id, name: self.name, breed: self.breed)
+        sql = <<-SQL
+            UPDATE dogs
+            SET name = #{self.name}
+            WHERE id = #{self.id}
+            SQL
+        x = DB[:conn].execute(sql)
+    end
+
 end
+
+# Dog.create(name: 'teddy', breed: 'cockapoo')
+# Dog.create(name: 'teddy', breed: 'pug')
+
+# new_dog = Dog.find_or_create_by(name: 'teddy', breed: 'irish setter')
 
